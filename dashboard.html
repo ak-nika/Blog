@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <style>
+        body{
+            background-color: rgb(242, 242, 242);
+            font-family: sans-serif;
+        } 
+        .div{
+            width: 50%;
+            background-color: white;
+            border: 1px solid gainsboro;
+            border-radius: 20px;
+            margin: auto;
+            padding: 10px 0px;
+            margin-top: 20px;
+        }
+        h1{
+            text-align: center;
+        }
+        input{
+            display: block;
+        }
+        #title{
+            display: block;
+            width: 95%;
+            margin-bottom: 20px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1.5px solid gainsboro;
+            padding-left: 10px;
+            transition: all 0.2s linear;
+            outline: none;
+        }
+        input{
+            margin: auto;
+        }
+        textarea{
+            width: 95%;
+            margin-left: 20px;
+        }
+        img{
+            margin: auto;
+        }
+        .dv{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .dvi{
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        button{
+            background-color: darkblue;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+        #div2{
+            margin: auto;
+            width: 70%;
+            background-color: white;
+            border: 1px solid gainsboro;
+            border-radius: 10px;
+            padding: 20px 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dvi">
+        <button onclick="logout()">Log Out</button>
+        <button onclick="liked()">Liked Posts</button>
+    </div>
+   <div class="div">
+        <h1>Welcome <span id="username"></span></h1>
+        <input type="text" placeholder="Title" id="title">
+        <textarea name="" cols="30" rows="10" placeholder="Content" id="content"></textarea>
+        <input type="file" onchange="pickFile(event)">
+        <div class="dv"><img width="200" height="200" id="img"></div>
+        <div class="dv"><button onclick="addPost()">Add Post</button></div>       
+   </div>
+   <div id="div1"></div>
+</body>
+<script>
+    let post = [];
+    let title = document.getElementById("title");
+    let content = document.getElementById("content");
+    let username = document.getElementById("username");
+    let imgURL;
+    let div1 = document.getElementById("div1");
+    let currUser = JSON.parse(localStorage.getItem("currUser"));
+    username.innerHTML = currUser.fname;
+
+    if(localStorage.getItem("post") === null){
+        localStorage.setItem("post", "[]");
+    }
+
+    if(currUser == null){
+        alert("You're not logged in");
+        window.location.href = "log in";
+    }
+
+    function liked(){
+        window.location.href = "likedpost.html";
+    }
+
+    function logout(){
+        localStorage.removeItem("currUser");
+        window.location.href = "login.html"
+    }
+
+    function pickFile(ev){
+        let file = ev.target.files[0];
+        let reader = new FileReader()
+        reader.addEventListener("load", (e)=>{
+            imgURL = e.target.result
+            img.src = imgURL
+        })
+
+        if(file){
+            reader.readAsDataURL(file)
+        }
+    }
+
+    let date = new Date();
+    function addPost(){
+        let postData = {
+            author: currUser.fname,
+            title: title.value,
+            content: content.value,
+            img: imgURL,
+            timePosted: `${date.getHours()} : ${date.getMinutes() < 10 ? ("0"+date.getMinutes()) : date.getMinutes()}`,
+            isLiked: false
+        }
+        let storedArr = localStorage.getItem("post");
+        let parsedArr = JSON.parse(storedArr);
+        post = [...parsedArr, postData];
+        localStorage.setItem("post", JSON.stringify(post));
+        window.location.href = "dashboard.html";
+        displayPost();
+    }
+
+    function displayPost(){
+        let posted = JSON.parse(localStorage.getItem("post"));
+        for (let index = 0; index < posted.length; index++) {
+            div1.innerHTML += `
+            <div id="div2">
+                <button onclick="delPost(${index})">X</button>
+                <span>${posted[index].author}</span><br>
+                <span>${posted[index].title}</span>
+                <p>${posted[index].content}</p>
+                <img src="${posted[index].img}" width="100%" height="200px">
+                <div class="dvi"><button onclick="likePost(${index})">${posted[index].isLiked ? "Unlike" : "Like"}</button><p>Posted ${posted[index].timePosted}</p></div>
+            </div>
+            `
+        }
+    }
+
+    displayPost();
+
+    function delPost(i){
+        let post = JSON.parse(localStorage.getItem("post"));
+        post.splice(i, 1);
+        localStorage.setItem("post", JSON.stringify(post));
+        window.location.href = "dashboard.html";
+    }
+
+    function likePost(i){
+        let post = JSON.parse(localStorage.getItem("post"));
+        post[i].isLiked = !post[i].isLiked;
+        localStorage.setItem("post", JSON.stringify(post));
+        window.location.href = "dashboard.html";
+    }
+</script>
+</html>
